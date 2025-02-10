@@ -163,68 +163,34 @@ def detect(save_img=False):
     print(f'Done. ({time.time() - t0:.3f}s)')
 
 
-import torch
-from models.experimental import attempt_load
-from utils.general import non_max_suppression, scale_coords
-from utils.datasets import LoadImages
-from utils.plots import plot_one_box
-import cv2
-import numpy as np
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--weights', nargs='+', type=str, default='yolov7.pt', help='model.pt path(s)')
+    parser.add_argument('--source', type=str, default='inference/images', help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
+    parser.add_argument('--conf-thres', type=float, default=0.25, help='object confidence threshold')
+    parser.add_argument('--iou-thres', type=float, default=0.45, help='IOU threshold for NMS')
+    parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
+    parser.add_argument('--view-img', action='store_true', help='display results')
+    parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
+    parser.add_argument('--save-conf', action='store_true', help='save confidences in --save-txt labels')
+    parser.add_argument('--nosave', action='store_true', help='do not save images/videos')
+    parser.add_argument('--classes', nargs='+', type=int, help='filter by class: --class 0, or --class 0 2 3')
+    parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
+    parser.add_argument('--augment', action='store_true', help='augmented inference')
+    parser.add_argument('--update', action='store_true', help='update all models')
+    parser.add_argument('--project', default='runs/detect', help='save results to project/name')
+    parser.add_argument('--name', default='exp', help='save results to project/name')
+    parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
+    parser.add_argument('--no-trace', action='store_true', help='don`t trace model')
+    opt = parser.parse_args()
+    print(opt)
+    #check_requirements(exclude=('pycocotools', 'thop'))
 
-# Load YOLO model once (global variable)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = attempt_load("yolov7.pt", map_location=device)
-model.eval()  # Set model to inference mode
-
-CLASS_NAMES = {
-    0: "Melanocytic nevi",
-    1: "Melanoma",
-    2: "Benign keratosis",
-    3: "Basal cell carcinoma",
-    4: "Actinic Keratoses",
-    5: "Vascular lesions",
-    6: "Dermatofibroma"
-}
-
-def detect_image(image_path, conf_threshold=0.55):
-    """Runs detection on an image and returns results"""
-    dataset = LoadImages(image_path, img_size=640)
-
-    for path, img, im0s, vid_cap in dataset:
-        img = torch.from_numpy(img).to(device).float() / 255.0  # Normalize
-        img = img.unsqueeze(0) if img.ndimension() == 3 else img
-
-        with torch.no_grad():
-            pred = model(img)[0]
-
-        pred = non_max_suppression(pred, conf_threshold, 0.45, agnostic=False)
-
-        results = []
-        for det in pred:
-            if len(det):
-                det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0s.shape).round()
-
-                for *xyxy, conf, cls in det:
-                    cls = int(cls.item())
-                    conf = float(conf.item())  # Convert to percentage
-                    label = f"{CLASS_NAMES.get(cls, 'Unknown')} ({conf:.2f})"
-                    CLASS_COLORS = {
-                        0: (0, 150, 0),    # Melanocytic nevi 
-                        1: (150, 0, 150),    # Melanoma 
-                        2: (0, 60, 150),    # Benign keratosis 
-                        3: (150, 0, 0),  # Basal cell carcinoma 
-                        4: (150, 150, 0),  # Actinic Keratoses 
-                        5: (150, 70, 0),  # Vascular lesions 
-                        6: (0, 150, 150)   # Dermatofibroma 
-                    }
-
-                    plot_one_box(xyxy, im0s, label=label, color=CLASS_COLORS.get(cls, (255, 255, 255)), line_thickness=2)
-
-                    results.append({"disease": CLASS_NAMES.get(cls, "Unknown"), "confidence": conf})
-
-        # Save result image
-        result_path = image_path.replace("uploads", "results")
-        cv2.imwrite(result_path, im0s)
-
-    return result_path, results
-
+    with torch.no_grad():
+        if opt.update:  # update all models (to fix SourceChangeWarning)
+            for opt.weights in ['yolov7.pt']:
+                detect()
+                strip_optimizer(opt.weights)
+        else:
+            detect()

@@ -17,7 +17,6 @@ from utils.metrics import ap_per_class, ConfusionMatrix
 from utils.plots import plot_images, output_to_target, plot_study_txt
 from utils.torch_utils import select_device, time_synchronized, TracedModel
 
-from utils.plots import plot_results
 
 def test(data,
          weights=None,
@@ -251,17 +250,6 @@ def test(data,
             wandb_logger.log({"Validation": val_batches})
     if wandb_images:
         wandb_logger.log({"Bounding Box Debugger/Images": wandb_images})
-
-    # Path to results.txt
-    results_file = Path(save_dir) / 'results.txt'
-
-    # Generate additional training/validation loss plots
-    if results_file.exists():
-        print("Generating training and validation loss plots...")
-        plot_results(save_dir=save_dir)
-    else:
-        print(f"Warning: {results_file} not found. Skipping loss plot generation.")
-
 
     # Save JSON
     if save_json and len(jdict):

@@ -161,18 +161,17 @@ class ConfusionMatrix:
     def matrix(self):
         return self.matrix
 
-    
     def plot(self, save_dir='', names=()):
         try:
             import seaborn as sn
 
-            array = self.matrix #/ (self.matrix.sum(0).reshape(1, self.nc + 1) + 1E-6)  # normalize
+            array = self.matrix / (self.matrix.sum(0).reshape(1, self.nc + 1) + 1E-6)  # normalize
             array[array < 0.005] = np.nan  # don't annotate (would appear as 0.00)
 
             fig = plt.figure(figsize=(12, 9), tight_layout=True)
             sn.set(font_scale=1.0 if self.nc < 50 else 0.8)  # for label size
             labels = (0 < len(names) < 99) and len(names) == self.nc  # apply names to ticklabels
-            sn.heatmap(array, annot=self.nc < 30, annot_kws={"size": 8}, cmap='Blues', fmt='.0f', square=True,
+            sn.heatmap(array, annot=self.nc < 30, annot_kws={"size": 8}, cmap='Blues', fmt='.2f', square=True,
                        xticklabels=names + ['background FP'] if labels else "auto",
                        yticklabels=names + ['background FN'] if labels else "auto").set_facecolor((1, 1, 1))
             fig.axes[0].set_xlabel('True')
@@ -184,47 +183,6 @@ class ConfusionMatrix:
     def print(self):
         for i in range(self.nc + 1):
             print(' '.join(map(str, self.matrix[i])))
-
-
-    # def plot(self, save_dir='', names=()):
-    #     try:
-    #         import seaborn as sn
-
-    #         # Normalize the matrix for coloring while keeping the raw values for annotations
-    #         normalized_matrix = self.matrix / (self.matrix.sum(0).reshape(1, self.nc + 1) + 1E-6)
-    #         normalized_matrix[normalized_matrix < 0.005] = np.nan  # don't annotate small values
-
-    #         fig = plt.figure(figsize=(12, 9), tight_layout=True)
-    #         sn.set(font_scale=1.0 if self.nc < 50 else 0.8)  # Adjust label size based on class count
-
-    #         # Labels for x and y axes
-    #         labels = (0 < len(names) < 99) and len(names) == self.nc
-
-    #         # Create heatmap
-    #         sn.heatmap(
-    #             normalized_matrix,
-    #             annot=self.matrix,  # Raw values for annotations
-    #             annot_kws={"size": 8},  # Annotation size
-    #             cmap='Blues',          # Heatmap color scheme
-    #             fmt='.0f',             # Format raw annotations as integers
-    #             square=True,
-    #             xticklabels=names + ['background FP'] if labels else "auto",
-    #             yticklabels=names + ['background FN'] if labels else "auto"
-    #         ).set_facecolor((1, 1, 1))
-
-    #         # Add axis labels
-    #         fig.axes[0].set_xlabel('True')
-    #         fig.axes[0].set_ylabel('Predicted')
-
-    #         # Save the figure
-    #         fig.savefig(Path(save_dir) / 'confusion_matrix.png', dpi=250)
-    #         plt.close(fig)
-    #     except Exception as e:
-    #         print(f"Error while plotting confusion matrix: {e}")
-
-    # def print(self):
-    #     for i in range(self.nc + 1):
-    #         print(' '.join(map(str, self.matrix[i])))
 
 
 # Plots ----------------------------------------------------------------------------------------------------------------

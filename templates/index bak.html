@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLOv7 Detection</title>
+    <script>
+        function uploadAndDetect() {
+            let formData = new FormData();
+            let fileInput = document.getElementById("fileInput").files[0];
+
+            if (!fileInput) {
+                alert("Please select an image.");
+                return;
+            }
+
+            formData.append("file", fileInput);
+
+            fetch("/upload", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    document.getElementById("resultImage").src = data.output_image;
+                    document.getElementById("resultSection").style.display = "block";
+
+                    let resultsList = document.getElementById("resultsList");
+                    resultsList.innerHTML = ""; // Clear previous results
+
+                    if (data.detections.length > 0) {
+                        data.detections.forEach(det => {
+                            let listItem = document.createElement("li");
+                            listItem.textContent = `${det.disease} (Confidence: ${(det.confidence * 100).toFixed(2)}%)`;
+                            resultsList.appendChild(listItem);
+                        });
+                    } else {
+                        let listItem = document.createElement("li");
+                        listItem.textContent = "No diseases detected.";
+                        resultsList.appendChild(listItem);
+                    }
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
+</head>
+<body>
+    <h2>Upload an Image for YOLOv7 Detection</h2>
+    <input type="file" id="fileInput">
+    <button onclick="uploadAndDetect()">Upload & Detect</button>
+
+    <div id="resultSection" style="display: none;">
+        <h3>Detection Result:</h3>
+        <img id="resultImage" src="" alt="Detection Result" style="max-width: 600px;">
+        <h3>Detected Diseases:</h3>
+        <ul id="resultsList"></ul>
+    </div>
+</body>
+</html>

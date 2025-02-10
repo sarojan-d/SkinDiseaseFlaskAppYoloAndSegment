@@ -394,128 +394,23 @@ def plot_results_overlay(start=0, stop=0):  # from utils.plots import *; plot_re
             ax[i].set_title(t[i])
             ax[i].legend()
             ax[i].set_ylabel(f) if i == 0 else None  # add filename
-        fig.savefig(f.replace('.txt', '.png'), dpi=600)
+        fig.savefig(f.replace('.txt', '.png'), dpi=200)
 
 
 def plot_results(start=0, stop=0, bucket='', id=(), labels=(), save_dir=''):
-    """
-    Plots training results, including loss curves (Box, Objectness, Classification) with train and validation,
-    and separate high-resolution plots for Precision, Recall, mAP@0.5, and mAP@0.5:0.95.
-
-    Args:
-        start (int): Start epoch.
-        stop (int): Stop epoch.
-        bucket (str): Bucket for cloud storage (if used).
-        id (tuple): IDs for cloud storage files (if used).
-        labels (tuple): Labels for curves.
-        save_dir (str): Directory to save the plots.
-    """
-    import matplotlib.pyplot as plt
-    import numpy as np
-    from pathlib import Path
-
-    # Metric names and file handling
-    metrics = ['Box Loss', 'Objectness Loss', 'Classification Loss']
-    extra_metrics = ['Precision', 'Recall', 'mAP@0.5', 'mAP@0.5:0.95']
-    indices = {'Box Loss': (0, 5), 'Objectness Loss': (1, 6), 'Classification Loss': (2, 7)}  # train, val indices
-    extra_indices = {'Precision': 3, 'Recall': 4, 'mAP@0.5': 8, 'mAP@0.5:0.95': 9}
-    files = list(Path(save_dir).glob('results*.txt'))
-    assert len(files), f'No results.txt files found in {os.path.abspath(save_dir)}, nothing to plot.'
-
-    # Normalize y-axis limits across loss plots, but keep Objectness Loss separate
-    loss_y_min, loss_y_max = float('inf'), float('-inf')
-    obj_y_min, obj_y_max = float('inf'), float('-inf')
-
-    for f in files:
-        results = np.loadtxt(f, usecols=[2, 3, 4, 8, 9, 12, 13, 14, 10, 11], ndmin=2).T
-        for metric, (train_idx, val_idx) in indices.items():
-            y_train = results[train_idx]
-            y_val = results[val_idx]
-
-            if metric == 'Objectness Loss':  # Separate limits for Objectness Loss
-                obj_y_min = min(obj_y_min, np.nanmin(y_train), np.nanmin(y_val))
-                obj_y_max = max(obj_y_max, np.nanmax(y_train), np.nanmax(y_val))
-            else:
-                loss_y_min = min(loss_y_min, np.nanmin(y_train), np.nanmin(y_val))
-                loss_y_max = max(loss_y_max, np.nanmax(y_train), np.nanmax(y_val))
-
-    # Objectness Loss y-limit should be a maximum of 0.02
-    obj_y_max = min(obj_y_max, 0.02)
-
-    # Plot individual loss curves with train and validation
-    for metric in metrics:
-        train_idx, val_idx = indices[metric]  # train and val indices for the metric
-        plt.figure(figsize=(10, 6))  # Higher resolution figure
-
-        for fi, f in enumerate(files):
-            try:
-                results = np.loadtxt(f, usecols=[2, 3, 4, 8, 9, 12, 13, 14, 10, 11], ndmin=2).T
-                n = results.shape[1]  # Number of rows
-                x = range(start, min(stop, n) if stop else n)  # Epoch range
-
-                # Plot train and val metrics
-                train_y = results[train_idx, x]
-                val_y = results[val_idx, x]
-                train_y[train_y == 0] = np.nan  # Ignore zero loss values
-                val_y[val_y == 0] = np.nan
-
-                label = labels[fi] if len(labels) else f.stem
-                plt.plot(x, train_y, label=f'{label} Train', linewidth=2, marker='.', markersize=8, color='blue')
-                plt.plot(x, val_y, label=f'{label} Val', linewidth=2, marker='.', markersize=8, color='orange')
-
-            except Exception as e:
-                print(f'Warning: Plotting error for {f}; {e}')
-
-        # Set consistent y-axis range, keeping Objectness Loss separate
-        if metric == 'Objectness Loss':
-            plt.ylim(obj_y_min, obj_y_max)
-        else:
-            plt.ylim(loss_y_min, loss_y_max)
-
-        plt.title(f'{metric} Curve', fontsize=14)  # Fixed title
-        plt.xlabel('Epoch', fontsize=12)
-        plt.ylabel('Loss', fontsize=12)
-        plt.grid(True)
-        plt.legend()
-        plt.savefig(Path(save_dir) / f'{metric.lower().replace(" ", "_")}_loss_curve.png', dpi=300)
-        plt.close()
-
-    # Plot individual high-resolution plots for Precision, Recall, mAP@0.5, mAP@0.5:0.95
-    for metric in extra_metrics:
-        metric_idx = extra_indices[metric]
-        plt.figure(figsize=(10, 6))  # Higher resolution figure
-
-        for fi, f in enumerate(files):
-            try:
-                results = np.loadtxt(f, usecols=[2, 3, 4, 8, 9, 12, 13, 14, 10, 11], ndmin=2).T
-                n = results.shape[1]  # Number of rows
-                x = range(start, min(stop, n) if stop else n)  # Epoch range
-
-                # Plot metric
-                y = results[metric_idx, x]
-                y[y == 0] = np.nan  # Ignore zero values
-
-                label = labels[fi] if len(labels) else f.stem
-                plt.plot(x, y, label=label, linewidth=2, marker='.', markersize=8)
-
-            except Exception as e:
-                print(f'Warning: Plotting error for {f}; {e}')
-
-        plt.title(f'{metric} Curve', fontsize=14)
-        plt.xlabel('Epoch', fontsize=12)
-        plt.ylabel(metric, fontsize=12)
-        plt.grid(True)
-        plt.legend()
-        plt.savefig(Path(save_dir) / f'{metric.lower().replace("@", "").replace(".", "_").replace(":", "_")}_curve.png', dpi=300)
-        plt.close()
-
-
-    # Original multi-metric plot (Precision, Recall, mAP@0.5, mAP@0.5:0.95, etc.)
+    # Plot training 'results*.txt'. from utils.plots import *; plot_results(save_dir='runs/train/exp')
     fig, ax = plt.subplots(2, 5, figsize=(12, 6), tight_layout=True)
     ax = ax.ravel()
     s = ['Box', 'Objectness', 'Classification', 'Precision', 'Recall',
          'val Box', 'val Objectness', 'val Classification', 'mAP@0.5', 'mAP@0.5:0.95']
-
+    if bucket:
+        # files = ['https://storage.googleapis.com/%s/results%g.txt' % (bucket, x) for x in id]
+        files = ['results%g.txt' % x for x in id]
+        c = ('gsutil cp ' + '%s ' * len(files) + '.') % tuple('gs://%s/results%g.txt' % (bucket, x) for x in id)
+        os.system(c)
+    else:
+        files = list(Path(save_dir).glob('results*.txt'))
+    assert len(files), 'No results.txt files found in %s, nothing to plot.' % os.path.abspath(save_dir)
     for fi, f in enumerate(files):
         try:
             results = np.loadtxt(f, usecols=[2, 3, 4, 8, 9, 12, 13, 14, 10, 11], ndmin=2).T
@@ -525,9 +420,12 @@ def plot_results(start=0, stop=0, bucket='', id=(), labels=(), save_dir=''):
                 y = results[i, x]
                 if i in [0, 1, 2, 5, 6, 7]:
                     y[y == 0] = np.nan  # don't show zero loss values
+                    # y /= y[0]  # normalize
                 label = labels[fi] if len(labels) else f.stem
                 ax[i].plot(x, y, marker='.', label=label, linewidth=2, markersize=8)
                 ax[i].set_title(s[i])
+                # if i in [5, 6, 7]:  # share train and val loss y axes
+                #     ax[i].get_shared_y_axes().join(ax[i], ax[i - 5])
         except Exception as e:
             print('Warning: Plotting error for %s; %s' % (f, e))
 

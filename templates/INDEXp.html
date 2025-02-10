@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skin Diseases Detection and Segmentation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="header">
+    <div class="container">
+        <nav>
+            <div id="logo">
+                <p>SDDS.</p>
+            </div>
+            <ul>
+                <li><a href="#header">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#detection">Detection</a></li>
+                <li><a href="#segmentation">Segmentation</a></li>
+                <li><a href="#evaluation">Evaluation</a></li>
+            </ul>
+        </nav>
+        <div class="header-text">
+            <h1>SKIN DISEASES<br> DETECTION <br>AND<br> SEGMENTATION </h1>
+        </div>
+    </div>
+</div>
+
+<!-- About Section -->
+<div id="about">
+    <div class="container">
+        <h1 class="sub-title">About</h1>
+        <div class="row">
+            <div class="about-col-1">
+                <img src="images/sk.webp">
+            </div>
+            <div class="about-col-2">
+                <p>In our web app, "Evaluating Deep Learning Models for Skin Disease Detection and Segmentation," users can upload images to detect and segment skin diseases. In the Detection part, the app uses YOLOv7, the best-performing model based on precision, recall, and mAP, to identify skin diseases and draw bounding boxes around the affected areas. In the Segmentation part, DeepLabV3+ generates a precise mask outlining the boundaries of the disease, helping to better understand its extent. This web app ensures accurate and efficient detection and segmentation, offering valuable support for early diagnosis and medical consultation, especially in remote areas.
+
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detection Section -->
+<div id="detection">
+    <div class="container">
+        <h1 class="sub-title">Detection</h1>
+        <div class="row">
+            <div class="about-col-1">
+                <img src="images/DET.jpg">
+            </div>
+            <div class="about-col-2">
+                <h3>Skin Disease Detection</h3>
+                <p>In this project, the Detection module employs YOLOv5 and YOLOv7 models to identify the presence of skin diseases in uploaded images. To determine the most effective model, we compare the performance of both using key metrics such as precision, recall, and mean Average Precision (mAP). After evaluation, YOLOv7 performs better than YOLOv5 based on these metrics. Therefore, YOLOv7 is selected as the final model for detecting skin diseases like eczema, psoriasis, and others. Once the best model is chosen, users can upload an image, which is then processed by YOLOv7 to detect any skin conditions and draw bounding boxes around the affected areas. The comparison of precision (the proportion of true positives among all positive detections), recall (the proportion of true positives identified out of all actual positives), and mAP (which aggregates precision-recall performance across different thresholds) ensures that the most reliable model is used for detection, providing accurate and trustworthy results for users.
+
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Segmentation Section -->
+<div id="segmentation">
+    <div class="container">
+        <h1 class="sub-title">Segmentation</h1>
+        <div class="work">
+            <img src="images/SEG.jpg">
+            <div class="work-text">
+                <h3>Skin Disease Segmentation</h3>
+            <p>Once a skin disease is detected, the Segmentation module further refines the results by providing a detailed, pixel-wise map of the affected area using models like UNet and DeepLabV3+. To determine the most effective model, we compare the performance of both using key metrics such as accuracy, loss, Dice coefficient, and IoU (Intersection over Union). After evaluation, DeepLabV3+ outperforms UNet based on these metrics and is selected as the final segmentation model. The system takes the detected image from the YOLOv7 detection model and processes it through DeepLabV3+, generating a precise mask outlining the disease’s boundaries. This segmentation mask is then overlaid on the detected image, visually highlighting the exact affected region. By evaluating accuracy (overall model performance), loss (how well the model fits the data), Dice coefficient (measuring the similarity between the predicted and true segmentation), and IoU (which quantifies overlap), we ensure that the most reliable model is used for segmentation. This process helps users and healthcare professionals gain a clearer understanding of the disease’s extent and severity, making it a crucial tool for diagnosis and treatment planning.
+            </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Evaluation Section -->
+<div id="evaluation">
+    <div class="container">
+        <h1 class="sub-title">Evaluation</h1>
+        <form id="upload-form">
+            <input type="file" id="imageInput" accept="image/*">
+            <button type="submit" class="btn">Submit</button>
+        </form>
+        <div id="preview">
+            <h3>Uploaded Image:</h3>
+            <img id="preview-img" src="" alt="">
+        </div>
+        <div class="evaluation-buttons">
+            <a href="#" class="btn">Detection</a>
+            <a href="#" class="btn">Segmentation</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("imageInput").addEventListener("change", function(event) {
+        let reader = new FileReader();
+        reader.onload = function(){
+            document.getElementById("preview-img").src = reader.result;
+            document.getElementById("preview-img").style.display = "block";
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    });
+
+    document.getElementById("upload-form").addEventListener("submit", function(event) {
+        event.preventDefault();
+        alert("Image submitted for processing!");
+    });
+</script>
+
+</body>
+</html>

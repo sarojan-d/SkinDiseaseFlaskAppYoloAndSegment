@@ -422,25 +422,15 @@ def plot_results(start=0, stop=0, bucket='', id=(), labels=(), save_dir=''):
     files = list(Path(save_dir).glob('results*.txt'))
     assert len(files), f'No results.txt files found in {os.path.abspath(save_dir)}, nothing to plot.'
 
-    # Normalize y-axis limits across loss plots, but keep Objectness Loss separate
+    # Normalize y-axis limits across loss plots
     loss_y_min, loss_y_max = float('inf'), float('-inf')
-    obj_y_min, obj_y_max = float('inf'), float('-inf')
-
     for f in files:
         results = np.loadtxt(f, usecols=[2, 3, 4, 8, 9, 12, 13, 14, 10, 11], ndmin=2).T
-        for metric, (train_idx, val_idx) in indices.items():
+        for train_idx, val_idx in indices.values():
             y_train = results[train_idx]
             y_val = results[val_idx]
-
-            if metric == 'Objectness Loss':  # Separate limits for Objectness Loss
-                obj_y_min = min(obj_y_min, np.nanmin(y_train), np.nanmin(y_val))
-                obj_y_max = max(obj_y_max, np.nanmax(y_train), np.nanmax(y_val))
-            else:
-                loss_y_min = min(loss_y_min, np.nanmin(y_train), np.nanmin(y_val))
-                loss_y_max = max(loss_y_max, np.nanmax(y_train), np.nanmax(y_val))
-
-    # Objectness Loss y-limit should be a maximum of 0.02
-    obj_y_max = min(obj_y_max, 0.02)
+            loss_y_min = min(loss_y_min, np.nanmin(y_train), np.nanmin(y_val))
+            loss_y_max = max(loss_y_max, np.nanmax(y_train), np.nanmax(y_val))
 
     # Plot individual loss curves with train and validation
     for metric in metrics:
@@ -466,13 +456,9 @@ def plot_results(start=0, stop=0, bucket='', id=(), labels=(), save_dir=''):
             except Exception as e:
                 print(f'Warning: Plotting error for {f}; {e}')
 
-        # Set consistent y-axis range, keeping Objectness Loss separate
-        if metric == 'Objectness Loss':
-            plt.ylim(obj_y_min, obj_y_max)
-        else:
-            plt.ylim(loss_y_min, loss_y_max)
-
-        plt.title(f'{metric} Curve', fontsize=14)  # Fixed title
+        # Set consistent y-axis range
+        plt.ylim(loss_y_min, loss_y_max)
+        plt.title(f'{metric} Loss Curve', fontsize=14)
         plt.xlabel('Epoch', fontsize=12)
         plt.ylabel('Loss', fontsize=12)
         plt.grid(True)
@@ -508,7 +494,6 @@ def plot_results(start=0, stop=0, bucket='', id=(), labels=(), save_dir=''):
         plt.legend()
         plt.savefig(Path(save_dir) / f'{metric.lower().replace("@", "").replace(".", "_").replace(":", "_")}_curve.png', dpi=300)
         plt.close()
-
 
     # Original multi-metric plot (Precision, Recall, mAP@0.5, mAP@0.5:0.95, etc.)
     fig, ax = plt.subplots(2, 5, figsize=(12, 6), tight_layout=True)
